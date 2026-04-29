@@ -8,6 +8,7 @@ library(pheatmap)
 library(ComplexHeatmap)
 library(circlize)
 library(UpSetR)
+library(scales)
 library(patchwork)
 library(ggsci)
 library(ggrepel)
@@ -397,11 +398,30 @@ cat("✓ Heatmap saved as PDF!\n")
 
 
 # Figure 4: Panel coverage analysis ----
-
+# Re-annotate cancer types:
+coverage_stats <- coverage_stats %>%
+  mutate(
+    cancer_label = case_when(
+      grepl("brca", project)      ~ "Breast (BRCA)",
+      grepl("prad", project)      ~ "Prostate (PRAD)",
+      grepl("cesc", project)      ~ "Cervical (CESC)",
+      grepl("lihc", project)      ~ "Liver (LIHC)",
+      grepl("coadread", project)  ~ "Colorectal (COAD/READ)",
+      grepl("luad", project)      ~ "Lung Adeno (LUAD)",
+      grepl("lusc", project)      ~ "Lung Squam (LUSC)",
+      grepl("ov_", project)       ~ "Ovarian (OV)",
+      grepl("blca", project)      ~ "Bladder (BLCA)",
+      grepl("stad", project)      ~ "Stomach (STAD)",
+      grepl("esca", project)      ~ "Esophageal (ESCA)",
+      grepl("ucec", project)      ~ "Endometrial (UCEC)",
+      grepl("paad", project)      ~ "Pancreatic (PAAD)",
+      TRUE ~ project
+    )
+  )
 
 # A) Mutation coverage by cancer type
 p4a <- coverage_stats %>%
-  ggplot(aes(x = reorder(project, coverage_percent), y = coverage_percent, 
+  ggplot(aes(x = reorder(cancer_label, coverage_percent), y = coverage_percent, 
              fill = base::as.factor(panel_size))) +
   geom_col(position = "dodge") +
   coord_flip() +
@@ -415,7 +435,7 @@ p4a <- coverage_stats %>%
 
 # B) Sample coverage by cancer type
 p4b <- coverage_stats %>%
-  ggplot(aes(x = reorder(project, sample_coverage_percent), 
+  ggplot(aes(x = reorder(cancer_label, sample_coverage_percent), 
              y = sample_coverage_percent,
              fill = base::as.factor(panel_size))) +
   geom_col(position = "dodge") +
@@ -466,8 +486,10 @@ p4 <- p4 +
     theme = theme(plot.title = element_text(size = 16, face = "bold"))
   )
 
+print(p4)
+
 ggsave(
-  here("results", "figures", "fig4 _coverage_analysis.pdf"),
+  here("results", "figures", "fig4_coverage_analysis.pdf"),
   p4, width = 15, height = 10, dpi = 300
 )
 

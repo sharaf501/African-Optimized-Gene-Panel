@@ -143,6 +143,21 @@ extract_genes_from_abstracts <- function(pmids, batch_size = 100) {
   num_batches <- ceiling(length(pmids) / batch_size)
   all_genes <- list()
   
+  # Common cancer genes pattern
+  gene_pattern <- paste0(
+    "\\b(",
+    paste(c(
+      "TP53", "BRCA1", "BRCA2", "KRAS", "NRAS", "BRAF", "EGFR", "PIK3CA", 
+      "PTEN", "APC", "ATM", "CHEK2", "PALB2", "MLH1", "MSH2", "MSH6", "PMS2",
+      "ERBB2", "MET", "ALK", "ROS1", "CDKN2A", "CTNNB1", "VHL", "STK11",
+      "SMAD4", "FBXW7", "FGFR1", "FGFR2", "FGFR3", "NOTCH1", "IDH1", "IDH2",
+      "AR", "ESR1", "GATA3", "MAP3K1", "CDH1", "SPOP", "TERT", "AXIN1",
+      "ID3", "TCF3", "NFE2L2", "EP300", "MYC", "MYCN", "ARID1A", "SMARCA4",
+      "RET", "RB1", "NF1", "HRAS", "JAK2", "KIT", "PDGFRA", "FLT3"
+    ), collapse = "|"),
+    ")\\b"
+  )
+  
   for (i in 1:num_batches) {
     cat("Processing batch", i, "of", num_batches, "\n")
     
@@ -150,56 +165,70 @@ extract_genes_from_abstracts <- function(pmids, batch_size = 100) {
     end_idx <- min(i * batch_size, length(pmids))
     batch_ids <- pmids[start_idx:end_idx]
     
-    # Fetch abstracts
-    abstracts <- tryCatch({
+    # Fetch abstracts as XML so we can parse per-article
+    abstract_xml <- tryCatch({
       entrez_fetch(
         db = "pubmed",
         id = batch_ids,
-        rettype = "abstract",
-        retmode = "text"
+        rettype = "xml",
+        retmode = "xml"
       )
     }, error = function(e) {
-      cat("Error fetching abstracts:", e$message, "\n")
-      return("")
+      cat("Error fetching batch:", e$message, "\n")
+      return(NULL)
     })
     
-    # Common cancer genes pattern
-    gene_pattern <- paste0(
-      "\\b(",
-      paste(c(
-        "TP53", "BRCA1", "BRCA2", "KRAS", "NRAS", "BRAF", "EGFR", "PIK3CA", 
-        "PTEN", "APC", "ATM", "CHEK2", "PALB2", "MLH1", "MSH2", "MSH6", "PMS2",
-        "ERBB2", "MET", "ALK", "ROS1", "CDKN2A", "CTNNB1", "VHL", "STK11",
-        "SMAD4", "FBXW7", "FGFR1", "FGFR2", "FGFR3", "NOTCH1", "IDH1", "IDH2",
-        "AR", "ESR1", "GATA3", "MAP3K1", "CDH1", "SPOP", "TERT", "AXIN1",
-        "ID3", "TCF3", "NFE2L2", "EP300", "MYC", "MYCN", "ARID1A", "SMARCA4",
-        "RET", "RB1", "NF1", "HRAS", "JAK2", "KIT", "PDGFRA", "FLT3"
-      ), collapse = "|"),
-      ")\\b"
-    )
-    
-    genes_found <- str_extract_all(abstracts, regex(gene_pattern, ignore_case = TRUE))
-    
-    # Handle case where no genes found
-    if (length(genes_found) == 0 || all(lengths(genes_found) == 0)) {
-      genes_found <- rep(list(character(0)), length(batch_ids))
+    if (is.null(abstract_xml)) {
+      next
     }
     
-    batch_results <- tibble(
-      pmid = batch_ids,
-      genes = genes_found
-    )
+    # Parse the XML
+    xml_doc <- xml2::read_xml(abstract_xml)
+    articles <- xml2::xml_find_all(xml_doc, ".//PubmedArticle")
+    
+    batch_results <- map_dfr(articles, function(article) {
+      # Extract PMID for this specific article
+      article_pmid <- xml2::xml_text(
+        xml2::xml_find_first(article, ".//PMID")
+      )
+      
+      # Extract abstract text for this specific article
+      abstract_nodes <- xml2::xml_find_all(
+        article, ".//AbstractText"
+      )
+      abstract_text <- paste(
+        xml2::xml_text(abstract_nodes), collapse = " "
+      )
+      
+      # Also get the title
+      title_node <- xml2::xml_find_first(article, ".//ArticleTitle")
+      title_text <- xml2::xml_text(title_node)
+      
+      # Combine title and abstract for gene searching
+      full_text <- paste(title_text, abstract_text)
+      
+      # Extract genes from THIS article only
+      genes_found <- unique(toupper(
+        unlist(str_extract_all(full_text, regex(gene_pattern, ignore_case = TRUE)))
+      ))
+      
+      if (length(genes_found) == 0) {
+        return(tibble(pmid = as.numeric(article_pmid), genes = NA_character_))
+      }
+      
+      tibble(
+        pmid = as.numeric(article_pmid),
+        genes = genes_found
+      )
+    })
     
     all_genes[[i]] <- batch_results
-    
     Sys.sleep(0.5)
   }
   
   genes_df <- bind_rows(all_genes) %>%
-    unnest(genes) %>%
-    mutate(genes = toupper(genes)) %>%
-    distinct() %>%
-    filter(genes != "")
+    filter(!is.na(genes), genes != "") %>%
+    distinct()
   
   return(genes_df)
 }

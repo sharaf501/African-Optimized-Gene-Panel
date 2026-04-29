@@ -12,8 +12,8 @@ library(here)
 simulate_panel_performance <- function(
     panel_genes,
     mutation_rates,
-    n_samples = 1000,
-    n_simulations = 100
+    n_samples = 500,
+    n_simulations = 10000
 ) {
   
   results <- map_dfr(1:n_simulations, function(sim) {
@@ -53,7 +53,7 @@ simulation_results <- simulate_panel_performance(
   panel_70,
   mutation_rates,
   n_samples = 500,
-  n_simulations = 100
+  n_simulations = 10000
 )
 
 write_csv(simulation_results, here("results", "tables", "simulation_results.csv"))
@@ -109,6 +109,8 @@ p_power <- ggplot(power_results,
     caption = "Red line indicates 80% power threshold"
   ) +
   theme_minimal(base_size = 12)
+
+print (p_power)
 
 ggsave(
   here("results", "figures", "fig7_power_analysis.pdf"),
