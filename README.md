@@ -16,10 +16,10 @@ Africa bears 15% of the global cancer burden but has minimal representation in c
 ## These script presents the design and validation of an African-specific targeted cancer gene panel optimized for resource-limited settings. 
 
 ## Notes:
-Pan-Cancer Score: The average of (a) frequency score, defined as the gene's pan-cancer mutation frequency divided by the maximum observed frequency, and (b) breadth score, defined as the proportion of the 12 cancer types in which the gene harbors non-silent mutations.
-African Relevance Score (30%): Mutation frequencies across TCGA cancer types were weighted by GLOBOCAN 2022 African priority scores (Table 1). The weighted frequencies were summed per gene and converted to percentile ranks to yield a 0–1 scale.
-Literature Support Score (20%): The normalized frequency of gene mentions across 1,349 African cancer genomics articles retrieved through per-abstract PubMed mining, with each gene's article count divided by the maximum observed count.
-Expert Curation Score (20%): A binary score reflecting presence in the combined Foundation Medicine CDx and MSK-IMPACT gene list (1 if present; 0 if absent).
+- Pan-Cancer Score: The average of (a) frequency score, defined as the gene's pan-cancer mutation frequency divided by the maximum observed frequency, and (b) breadth score, defined as the proportion of the 12 cancer types in which the gene harbors non-silent mutations.
+- African Relevance Score (30%): Mutation frequencies across TCGA cancer types were weighted by GLOBOCAN 2022 African priority scores (Table 1). The weighted frequencies were summed per gene and converted to percentile ranks to yield a 0–1 scale.
+- Literature Support Score (20%): The normalized frequency of gene mentions across 1,349 African cancer genomics articles retrieved through per-abstract PubMed mining, with each gene's article count divided by the maximum observed count.
+- Expert Curation Score (20%): A binary score reflecting presence in the combined Foundation Medicine CDx and MSK-IMPACT gene list (1 if present; 0 if absent).
 
 ## Limitations
 
