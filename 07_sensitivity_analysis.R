@@ -20,9 +20,7 @@ cat(strrep("=", 80), "\n")
 cat("SENSITIVITY ANALYSIS USING AFRICAN-ANCESTRY DATA\n")
 cat(strrep("=", 80), "\n\n")
 
-# ============================================
 # Load existing data
-# ============================================
 
 panel_70 <- read_csv(here("results", "tables", "panel_70_genes.csv"),
                      show_col_types = FALSE)
@@ -58,9 +56,9 @@ get_tcga_studies_for_top15_local <- function() {
 }
 
 
-# ============================================
-# SECTION 1: SCORING COMPONENT CORRELATION
-# ============================================
+
+# SECTION 1: SCORING COMPONENT CORRELATION ----
+
 
 cat("SECTION 1: Scoring component correlation analysis\n")
 cat(strrep("-", 60), "\n\n")
@@ -101,9 +99,9 @@ dev.off()
 cat("Saved: fig_supp_scoring_correlation.pdf\n\n")
 
 
-# ============================================
-# SECTION 2: TCGA BLACK/AFRICAN AMERICAN SUBSET
-# ============================================
+
+# SECTION 2: TCGA BLACK/AFRICAN AMERICAN SUBSET ----
+
 
 cat("SECTION 2: TCGA Black/African American subset analysis\n")
 cat(strrep("-", 60), "\n\n")
@@ -265,9 +263,9 @@ ggsave(here("results", "figures", "fig_supp_tcga_black_correlation.pdf"),
 cat("Saved: fig_supp_tcga_black_correlation.pdf\n\n")
 
 
-# ============================================
-# SECTION 3: GENIE NHB DATA FROM WEN ET AL.
-# ============================================
+
+# SECTION 3: GENIE NHB DATA FROM WEN ET AL. ----
+
 
 cat("SECTION 3: GENIE NHB data from Wen et al. (PMID: 40996301)\n")
 cat(strrep("-", 60), "\n\n")
@@ -459,9 +457,7 @@ ggsave(here("results", "figures", "fig_supp_nhb_nhw_heatmap.pdf"),
 cat("\nSaved: fig_supp_nhb_nhw_heatmap.pdf\n\n")
 
 
-# ============================================
-# SECTION 4: GENE RE-RANKING WITH AFRICAN-ANCESTRY FREQUENCIES
-# ============================================
+# SECTION 4: GENE RE-RANKING WITH AFRICAN-ANCESTRY FREQUENCIES ----
 
 cat("SECTION 4: Gene re-ranking with African-ancestry frequencies\n")
 cat(strrep("-", 60), "\n\n")
@@ -538,9 +534,9 @@ print(rank_comparison %>% arrange(rank_change) %>% head(10) %>%
         select(gene, original_rank, revised_rank, rank_change))
 
 
-# ============================================
-# SECTION 5: PANEL COVERAGE IN BLACK PATIENTS
-# ============================================
+
+# SECTION 5: PANEL COVERAGE IN BLACK PATIENTS ----
+
 
 cat("\n\nSECTION 5: Panel coverage in Black patients only\n")
 cat(strrep("-", 60), "\n\n")
@@ -574,9 +570,9 @@ if (nrow(tcga_mutations_black) > 0) {
 }
 
 
-# ============================================
-# SECTION 6: WEIGHTING SCHEME SENSITIVITY
-# ============================================
+
+# SECTION 6: WEIGHTING SCHEME SENSITIVITY ----
+
 
 cat("SECTION 6: Weighting scheme sensitivity analysis\n")
 cat(strrep("-", 60), "\n\n")
@@ -628,9 +624,9 @@ write_csv(sensitivity_results,
           here("results", "tables", "sensitivity_weighting_schemes.csv"))
 
 
-# ============================================
-# SECTION 7: PANEL TIER COMPARISON TABLE
-# ============================================
+
+# SECTION 7: PANEL TIER COMPARISON TABLE ----
+
 
 cat("SECTION 7: Quantitative comparison across panel tiers\n")
 cat(strrep("-", 60), "\n\n")
@@ -689,41 +685,4 @@ cat("\n")
 
 write_csv(tier_comparison,
           here("results", "tables", "sensitivity_panel_tier_comparison.csv"))
-
-
-# ============================================
-# FINAL SUMMARY
-# ============================================
-
-cat("\n")
-cat(strrep("=", 80), "\n")
-cat("SENSITIVITY ANALYSIS COMPLETE\n")
-cat(strrep("=", 80), "\n\n")
-
-cat("Output files generated:\n")
-cat("  Tables:\n")
-cat("    - sensitivity_tcga_black_vs_all.csv\n")
-cat("    - sensitivity_panel70_black_frequencies.csv\n")
-cat("    - sensitivity_genie_nhb_vs_nhw.csv\n")
-cat("    - sensitivity_genie_nhb_nhw_summary.csv\n")
-cat("    - sensitivity_rank_comparison.csv\n")
-cat("    - sensitivity_coverage_black_patients.csv\n")
-cat("    - sensitivity_weighting_schemes.csv\n")
-cat("    - sensitivity_panel_tier_comparison.csv\n")
-cat("  Figures:\n")
-cat("    - fig_supp_scoring_correlation.pdf\n")
-cat("    - fig_supp_tcga_black_correlation.pdf\n")
-cat("    - fig_supp_nhb_nhw_heatmap.pdf\n\n")
-
-cat("Key findings to report in manuscript:\n")
-cat("  1. TCGA Black vs All frequency correlation: rho =",
-    round(cor_test_tcga$estimate, 3), "\n")
-cat("  2. Gene ranking stability: rho =",
-    round(cor_ranks$estimate, 3), "\n")
-cat("  3. Weighting scheme sensitivity: Jaccard range =",
-    paste(range(sensitivity_results$jaccard_similarity[-1]), collapse = " - "), "\n")
-cat("  4. Black patient coverage: mean =",
-    ifelse(exists("coverage_black") && nrow(coverage_black) > 0,
-           paste0(round(mean(coverage_black$sample_coverage_pct), 1), "%"),
-           "insufficient data"), "\n")
 
